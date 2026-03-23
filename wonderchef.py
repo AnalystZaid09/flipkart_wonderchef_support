@@ -81,12 +81,19 @@ if support_file_upload and earn_more_upload:
         support_wonder[support_col] = pd.to_numeric(
             support_wonder[support_col], errors="coerce"
         )
+        # Fill unmatched / blank Qty Sold with 0
         support_wonder["Qty Sold"] = pd.to_numeric(
             support_wonder["Qty Sold"], errors="coerce"
-        )
+        ).fillna(0)
+        # Fill any remaining NaN in Total Support with 0
         support_wonder["Total Support"] = (
             support_wonder[support_col] * support_wonder["Qty Sold"]
-        )
+        ).fillna(0)
+
+    # ── Fill NaN → 0 in key columns so downloads are clean ─────────────────
+    for _col in [support_col, "Qty Sold", "Total Support"]:
+        if _col in support_wonder.columns:
+            support_wonder[_col] = support_wonder[_col].fillna(0)
 
     # ── Grand Total row ─────────────────────────────────────────────────────
     grand_total = pd.DataFrame(
@@ -110,7 +117,7 @@ if support_file_upload and earn_more_upload:
     total_qty = support_wonder["Qty Sold"].sum()
     total_support_req = support_wonder[support_col].sum()
     total_support_val = support_wonder["Total Support"].sum()
-    matched = support_wonder["Qty Sold"].notna().sum()
+    matched = (support_wonder["Qty Sold"] > 0).sum()
 
     k1, k2, k3, k4, k5 = st.columns(5)
     k1.metric("Products in Support File", total_products)
